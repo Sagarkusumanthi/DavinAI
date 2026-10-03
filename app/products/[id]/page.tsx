@@ -19,6 +19,9 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
   const { cityId } = useCity([]); // just read stored preference
 
   useEffect(() => {
@@ -65,6 +68,33 @@ export default function ProductDetailPage() {
   else if (storeBlocked) disabledReason = "This store is currently unavailable.";
   else if (storeClosed) disabledReason = "This store is closed right now.";
   else if (cityMismatch) disabledReason = `This product delivers in ${product.store.city.name}, not your selected city.`;
+
+  async function addToCart(clearFirst = false) {
+    if (disabledReason) return;
+    setAddingToCart(true);
+    setCartError(null);
+    try {
+      if (clearFirst) await fetch("/api/cart", { method: "DELETE" });
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, quantity }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          setCartError(body.message ?? "Your cart has items from another store.");
+        } else {
+          setCartError(body.message ?? "Could not add this to your cart.");
+        }
+        return;
+      }
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } finally {
+      setAddingToCart(false);
+    }
+  }
 
   function goToCheckout() {
     if (disabledReason) return;
@@ -138,12 +168,30 @@ export default function ProductDetailPage() {
               )}
             </div>
           )}
+
+          {cartError && (
+            <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+              {cartError}{" "}
+              <button className="font-medium underline" onClick={() => addToCart(true)}>
+                Clear cart &amp; add this instead
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-20 border-t border-ink/5 bg-white p-4">
-        <Button className="w-full" size="lg" disabled={!!disabledReason} onClick={goToCheckout}>
-          Send this gift · {formatINR(Number(product.price) * quantity)}
+      <div className="fixed bottom-16 left-0 right-0 z-20 flex gap-2 border-t border-ink/5 bg-white p-4">
+        <Button
+          variant="outline"
+          className="flex-1"
+          size="lg"
+          disabled={!!disabledReason || addingToCart}
+          onClick={() => addToCart(false)}
+        >
+          {addedToCart ? "✓ Added" : "Add to Cart"}
+        </Button>
+        <Button className="flex-1" size="lg" disabled={!!disabledReason} onClick={goToCheckout}>
+          Buy Now · {formatINR(Number(product.price) * quantity)}
         </Button>
       </div>
     </CustomerShell>

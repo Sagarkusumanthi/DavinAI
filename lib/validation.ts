@@ -187,3 +187,36 @@ export const adminOverrideSchema = z.object({
   targetStatus: z.enum(ORDER_STATUS_VALUES),
   reason: z.string().trim().min(3, "Please provide a reason (min 3 characters)"),
 });
+
+export const addToCartSchema = z.object({
+  productId: z.string().min(1),
+  quantity: z.number().int().min(1).max(10).default(1),
+});
+
+export const updateCartItemSchema = z.object({
+  quantity: z.number().int().min(0).max(10),
+});
+
+export const cartCheckoutSchema = recipientSchema
+  .merge(giftSchema)
+  .merge(
+    z.object({
+      deliveryOption: deliveryOptionEnum,
+      deliveryDate: z.string().optional(),
+      deliverySlot: deliverySlotEnum.optional(),
+      paymentMethod: paymentMethodEnum,
+      cityId: z.string().min(1),
+      idempotencyKey: z.string().min(10),
+    })
+  )
+  .superRefine((val, ctx) => {
+    if (val.deliveryOption === "SCHEDULED") {
+      if (!val.deliveryDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["deliveryDate"], message: "Pick a delivery date" });
+      }
+      if (!val.deliverySlot) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["deliverySlot"], message: "Pick a delivery slot" });
+      }
+    }
+  });
+export type CartCheckoutInput = z.infer<typeof cartCheckoutSchema>;

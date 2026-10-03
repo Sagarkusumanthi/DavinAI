@@ -12,3 +12,13 @@ export function calculateTotals(unitPrice: Prisma.Decimal, quantity: number, del
   const total = subtotal.add(deliveryFee);
   return { subtotal, deliveryFee, total };
 }
+
+export function calculateCartTotals(
+  lines: { unitPrice: Prisma.Decimal; quantity: number }[],
+  deliveryOption: "STANDARD" | "EXPRESS" | "SCHEDULED"
+) {
+  const subtotal = lines.reduce((sum, l) => sum.add(l.unitPrice.mul(l.quantity)), new Prisma.Decimal(0));
+  const deliveryFee = getDeliveryFee(deliveryOption);
+  const total = subtotal.add(deliveryFee);
+  return { subtotal, deliveryFee, total };
+}

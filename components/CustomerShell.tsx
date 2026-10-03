@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Compass, Package, UserRound, Gift, X, HelpCircle, LogOut, Info, Bell, Users } from "lucide-react";
+import { Home, Compass, Package, UserRound, Gift, X, HelpCircle, LogOut, Info, Bell, Users, ShoppingCart } from "lucide-react";
 import { useSession } from "@/lib/hooks/useSession";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,15 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const session = useSession();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    if (session?.role !== "CUSTOMER") return;
+    fetch("/api/cart")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCartCount(d?.cart?.items?.reduce((n: number, it: any) => n + it.quantity, 0) ?? 0))
+      .catch(() => {});
+  }, [session, pathname]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -37,13 +46,27 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-ink">Giftly</span>
           </Link>
-          <button
-            aria-label="Open account"
-            onClick={() => setDrawerOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-ink shadow-sm"
-          >
-            <UserRound className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/cart"
+              aria-label="Cart"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-ink shadow-sm"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose px-1 text-[10px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <button
+              aria-label="Open account"
+              onClick={() => setDrawerOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-ink shadow-sm"
+            >
+              <UserRound className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 

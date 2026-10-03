@@ -1,12 +1,12 @@
 import "server-only";
 import { getDb } from "@/lib/db";
 import { generateOrderCode } from "./orderCode";
-import { calculateTotals } from "./pricing";
+import { calculateTotals, calculateCartTotals } from "./pricing";
 import { isScheduleValid } from "./scheduling";
 import { isValidStoreTransition, isValidAdminOverride } from "./orderStateMachine";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/api-errors";
 import { ForbiddenError } from "@/lib/session";
-import type { CheckoutInput } from "@/lib/validation";
+import type { CheckoutInput, CartCheckoutInput } from "@/lib/validation";
 import { Prisma, OrderStatus, Role } from "@prisma/client";
 
 export interface CreateOrderParams {
@@ -139,6 +139,130 @@ export async function createOrder({ customerId, input }: CreateOrderParams) {
           if (replay) return replay;
         }
         // orderCode collision: loop and retry with a fresh code
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Could not generate a unique order code. Please try again.");
+}
+
+/**
+ * Creates an order from everything currently in the customer's cart (one
+ * store's worth of items, enforced when items were added to the cart).
+ * Re-validates every item server-side exactly like the single-item path,
+ * then clears the cart on success. Idempotent via the same unique-key rule.
+ */
+export async function createOrderFromCart({ customerId, input }: { customerId: string; input: CartCheckoutInput }) {
+  const db = getDb();
+
+  const existing = await db.order.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
+  if (existing) {
+    if (existing.customerId !== customerId) {
+      throw new ConflictError("This request has already been processed.");
+    }
+    return existing;
+  }
+
+  const cartItems = await db.cartItem.findMany({ where: { customerId }, include: { product: { include: { store: true } } } });
+  if (cartItems.length === 0) throw new ValidationError("Your cart is empty.");
+
+  const storeId = cartItems[0].product.storeId;
+  for (const item of cartItems) {
+    if (item.product.storeId !== storeId) {
+      throw new ValidationError("Your cart has items from more than one store - only one store can be ordered from at a time.");
+    }
+    if (item.product.isArchived || !item.product.isAvailable) {
+      throw new ValidationError(`"${item.product.name}" is no longer available.`);
+    }
+    if (item.product.store.moderationStatus === "BLOCKED") {
+      throw new ValidationError("This store is currently unavailable.");
+    }
+    if (!item.product.store.isOpen) {
+      throw new ValidationError("This store is currently closed.");
+    }
+    if (item.product.store.cityId !== input.cityId) {
+      throw new ValidationError("These products are not available in your selected city.");
+    }
+  }
+  const city = await db.city.findUnique({ where: { id: input.cityId } });
+  if (!city || !city.isActive) {
+    throw new ValidationError("Please choose an active delivery city.");
+  }
+
+  if (input.deliveryOption === "SCHEDULED") {
+    if (!input.deliveryDate || !input.deliverySlot || !isScheduleValid(input.deliveryDate, input.deliverySlot)) {
+      throw new ValidationError("Please choose a valid (non-elapsed) delivery date and slot.");
+    }
+  }
+
+  const { subtotal, deliveryFee, total } = calculateCartTotals(
+    cartItems.map((i) => ({ unitPrice: i.product.price, quantity: i.quantity })),
+    input.deliveryOption
+  );
+  const deliveryDate = input.deliveryOption === "SCHEDULED" && input.deliveryDate ? new Date(`${input.deliveryDate}T00:00:00+05:30`) : null;
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const orderCode = generateOrderCode();
+    try {
+      const order = await db.$transaction(async (tx) => {
+        const created = await tx.order.create({
+          data: {
+            orderCode,
+            customerId,
+            storeId,
+            cityId: input.cityId,
+            status: "ORDER_PLACED",
+            recipientName: input.recipientName,
+            recipientPhone: input.recipientPhone,
+            deliveryAddress: input.deliveryAddress,
+            landmark: input.landmark || null,
+            pincode: input.pincode || null,
+            senderName: input.senderName,
+            occasion: input.occasion,
+            giftMessage: input.giftMessage || null,
+            deliveryOption: input.deliveryOption,
+            deliveryDate,
+            deliverySlot: input.deliveryOption === "SCHEDULED" ? input.deliverySlot ?? null : null,
+            paymentMethod: input.paymentMethod,
+            subtotal,
+            deliveryFee,
+            total,
+            idempotencyKey: input.idempotencyKey,
+            items: {
+              create: cartItems.map((i) => ({
+                productId: i.productId,
+                productName: i.product.name,
+                unitPrice: i.product.price,
+                quantity: i.quantity,
+                lineTotal: i.product.price.mul(i.quantity),
+              })),
+            },
+            statusHistory: {
+              create: [
+                {
+                  previousStatus: null,
+                  status: "ORDER_PLACED",
+                  changedById: customerId,
+                  changedByRole: "CUSTOMER" as Role,
+                  note: null,
+                  isAdminOverride: false,
+                },
+              ],
+            },
+          },
+        });
+        await tx.cartItem.deleteMany({ where: { customerId } });
+        return created;
+      });
+      return order;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        const target = (e.meta?.target as string[] | undefined) ?? [];
+        if (target.includes("idempotencyKey")) {
+          const replay = await db.order.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
+          if (replay) return replay;
+        }
         continue;
       }
       throw e;
