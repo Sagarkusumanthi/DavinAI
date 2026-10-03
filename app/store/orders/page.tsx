@@ -17,10 +17,21 @@ const TABS = [
   { key: "rejected", label: "Rejected", statuses: ["REJECTED"] },
 ];
 
+const IN_PROGRESS = ["STORE_ACCEPTED", "PREPARING_GIFT", "READY_FOR_PICKUP", "OUT_FOR_DELIVERY"];
+
+function elapsedLabel(since: string, now: number) {
+  const sec = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function StoreOrdersPage() {
   const [orders, setOrders] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState("new");
+  const [now, setNow] = useState(() => Date.now());
 
   function load() {
     fetch("/api/store/orders")
@@ -35,7 +46,11 @@ export default function StoreOrdersPage() {
   useEffect(() => {
     load();
     const id = setInterval(load, 15000);
-    return () => clearInterval(id);
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      clearInterval(id);
+      clearInterval(tick);
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -63,11 +78,19 @@ export default function StoreOrdersPage() {
         {orders && filtered.length === 0 && <EmptyState title="No orders here" description="Nothing in this tab right now." />}
         {orders && filtered.length > 0 && (
           <div className="space-y-3">
-            {filtered.map((o) => (
+            {filtered.map((o) => {
+              const totalQty = o.items.reduce((s: number, it: any) => s + it.quantity, 0);
+              const acceptedAt = IN_PROGRESS.includes(o.status)
+                ? o.statusHistory?.find((h: any) => h.status === "STORE_ACCEPTED")?.changedAt
+                : null;
+              return (
               <Link key={o.id} href={`/store/orders/${o.id}`}>
                 <Card className="transition hover:shadow-md">
                   <CardContent className="flex items-center justify-between">
                     <div>
+                      {totalQty >= 3 && (
+                        <span className="mb-1 inline-block rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">🛍️ Large order · {totalQty} items</span>
+                      )}
                       <p className="text-xs text-muted">{o.orderCode}</p>
                       <p className="font-medium text-ink">{o.items[0]?.productName}</p>
                       <p className="text-sm text-muted">
@@ -80,13 +103,19 @@ export default function StoreOrdersPage() {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
+                      {acceptedAt && (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-amber-800" title="Time since accepted">
+                          ⏱ {elapsedLabel(acceptedAt, now)}
+                        </span>
+                      )}
                       <StatusBadge status={o.status} />
                       <p className="font-semibold text-ink">{formatINR(o.total)}</p>
                     </div>
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

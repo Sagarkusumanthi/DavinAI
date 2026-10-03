@@ -5,7 +5,7 @@
  * across renders/refreshes, and every place that shows them is labelled
  * "(demo)" so nobody mistakes them for real reviews or live ETAs.
  */
-function hashString(input: string): number {
+export function hashString(input: string): number {
   let h = 0;
   for (let i = 0; i < input.length; i++) {
     h = (h * 31 + input.charCodeAt(i)) | 0;
@@ -24,4 +24,20 @@ export function demoDeliveryWindow(id: string): string {
   const start = 30 + (h % 60);
   const end = start + 20 + (h % 20);
   return `${start}-${end} min`;
+}
+
+const RIDER_NAMES = ["Arjun Kumar", "Vikram Singh", "Rahul Verma", "Sandeep Rao", "Imran Khan", "Naveen Reddy"];
+
+export function demoRider(orderId: string) {
+  const h = hashString(orderId + "-rider");
+  return {
+    name: RIDER_NAMES[h % RIDER_NAMES.length],
+    vehicle: h % 2 === 0 ? "Bike" : "Scooter",
+    plate: `AP${10 + (h % 89)} XY ${1000 + (h % 8999)}`,
+  };
+}
+
+export function demoEtaMinutes(orderId: string, stepIndex: number) {
+  const h = hashString(orderId + "-eta");
+  return Math.max(5, 10 + (h % 50) - stepIndex * 6);
 }

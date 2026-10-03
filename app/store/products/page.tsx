@@ -23,6 +23,22 @@ import { Plus, Pencil, Archive } from "lucide-react";
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
+function Toggle({ checked, onChange, disabled, label }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn("relative h-[22px] w-10 flex-shrink-0 rounded-full transition disabled:opacity-50", checked ? "bg-[#1D9E75]" : "bg-gray-300")}
+    >
+      <span className={cn("absolute top-[3px] h-4 w-4 rounded-full bg-white transition-all", checked ? "left-[21px]" : "left-[3px]")} />
+    </button>
+  );
+}
+
 export default function StoreProductsPage() {
   const [products, setProducts] = useState<any[] | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -31,6 +47,7 @@ export default function StoreProductsPage() {
   const [editing, setEditing] = useState<any | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const {
     register,
@@ -98,6 +115,31 @@ export default function StoreProductsPage() {
     }
   }
 
+  async function setAvailability(id: string, isAvailable: boolean) {
+    setProducts((prev) => prev?.map((p) => (p.id === id ? { ...p, isAvailable } : p)) ?? prev);
+    const res = await fetch(`/api/store/products/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isAvailable }),
+    });
+    if (!res.ok) load();
+  }
+
+  async function setAllAvailability(isAvailable: boolean) {
+    setBulkSaving(true);
+    await fetch("/api/store/products/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isAvailable }),
+    });
+    setBulkSaving(false);
+    load();
+  }
+
+  const activeProducts = products?.filter((p) => !p.isArchived) ?? [];
+  const inStockCount = activeProducts.filter((p) => p.isAvailable).length;
+  const allInStock = activeProducts.length > 0 && inStockCount === activeProducts.length;
+
   async function archive(id: string) {
     await fetch(`/api/store/products/${id}/archive`, { method: "POST" });
     load();
@@ -121,6 +163,21 @@ export default function StoreProductsPage() {
       {products && products.length === 0 && (
         <EmptyState title="No products yet" description="Add your first product to start selling." actionLabel="Add product" onAction={openAdd} />
       )}
+      {products && activeProducts.length > 0 && (
+        <Card className="mb-3">
+          <CardContent className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-ink">
+                All items <span className="font-normal text-muted">({activeProducts.length})</span>
+              </p>
+              <p className="text-xs text-muted">
+                {inStockCount} of {activeProducts.length} items in stock
+              </p>
+            </div>
+            <Toggle checked={allInStock} disabled={bulkSaving} onChange={setAllAvailability} label="Mark all items in stock" />
+          </CardContent>
+        </Card>
+      )}
       {products && products.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => (
@@ -143,6 +200,9 @@ export default function StoreProductsPage() {
                     )}
                   </div>
                 </div>
+                {!p.isArchived && (
+                  <Toggle checked={p.isAvailable} onChange={(v) => setAvailability(p.id, v)} label={`${p.name} in stock`} />
+                )}
               </div>
               <CardContent className="flex gap-2 border-t border-ink/5 pt-3">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(p)} disabled={p.isArchived}>

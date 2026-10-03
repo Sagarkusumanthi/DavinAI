@@ -104,12 +104,37 @@ export async function getStoreDashboard(ownerUserId: string) {
     db.order.findMany({ where: { storeId: store.id }, orderBy: { placedAt: "desc" }, take: 5, include: { items: true } }),
     db.order.aggregate({ where: { storeId: store.id, status: "DELIVERED" }, _sum: { total: true } }),
   ]);
+  const allOrders = await db.order.findMany({ where: { storeId: store.id }, select: { placedAt: true } });
   return {
     store,
     newOrders,
     activeOrders,
     deliveredOrders,
+    totalOrders: allOrders.length,
+    orderTimes: allOrders.map((o) => o.placedAt),
     recentOrders,
     mockDeliveredValue: deliveredAgg._sum.total ?? 0,
   };
+}
+
+export async function getStoreReports(ownerUserId: string) {
+  const store = await getOwnedStore(ownerUserId);
+  const db = getDb();
+  const orders = await db.order.findMany({
+    where: { storeId: store.id },
+    select: { placedAt: true, status: true, total: true },
+    orderBy: { placedAt: "desc" },
+  });
+  return { store, orders };
+}
+
+export async function setOwnStoreOpen(ownerUserId: string, isOpen: boolean) {
+  const store = await getOwnedStore(ownerUserId);
+  return getDb().store.update({ where: { id: store.id }, data: { isOpen } });
+}
+
+export async function setAllOwnProductsAvailability(ownerUserId: string, isAvailable: boolean) {
+  const store = await getOwnedStore(ownerUserId);
+  const { count } = await getDb().product.updateMany({ where: { storeId: store.id, isArchived: false }, data: { isAvailable } });
+  return { count };
 }

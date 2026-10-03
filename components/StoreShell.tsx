@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, ClipboardList, Store as StoreIcon, LogOut, Gift } from "lucide-react";
+import { LayoutDashboard, Package, ClipboardList, Store as StoreIcon, LogOut, Gift, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/store/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/store/products", label: "Products", icon: Package },
   { href: "/store/orders", label: "Orders", icon: ClipboardList },
+  { href: "/store/reports", label: "Reports", icon: BarChart3 },
   { href: "/store/profile", label: "Profile", icon: StoreIcon },
 ];
 

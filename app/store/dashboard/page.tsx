@@ -6,13 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { OrderCard } from "@/components/OrderCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
-import { formatINR } from "@/lib/utils";
+import { formatINR, cn } from "@/lib/utils";
+import { BarChart, HOUR_LABELS, hourlyBuckets } from "@/components/Charts";
 
 const POLL_MS = 15000;
 
 export default function StoreDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
 
   function load() {
     fetch("/api/store/dashboard")
@@ -25,6 +27,18 @@ export default function StoreDashboardPage() {
         setError(null);
       })
       .catch((e) => setError(e.message));
+  }
+
+  async function toggleOpen() {
+    if (!data || toggling) return;
+    setToggling(true);
+    const res = await fetch("/api/store/open", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isOpen: !data.store.isOpen }),
+    });
+    setToggling(false);
+    if (res.ok) load();
   }
 
   useEffect(() => {
@@ -53,10 +67,26 @@ export default function StoreDashboardPage() {
 
   return (
     <StoreShell>
-      <h1 className="mb-1 font-serif text-xl font-semibold text-ink">{data.store.name}</h1>
-      <p className="mb-4 text-sm text-muted">{data.store.city.name} · {data.store.category.name}</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="mb-1 font-serif text-xl font-semibold text-ink">{data.store.name}</h1>
+          <p className="text-sm text-muted">{data.store.city.name} · {data.store.category.name}</p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleOpen}
+          disabled={toggling}
+          className={cn(
+            "flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold",
+            data.store.isOpen ? "bg-green-50 text-green-800" : "bg-red-50 text-red-700"
+          )}
+        >
+          <span className={cn("h-2 w-2 rounded-full", data.store.isOpen ? "bg-green-600" : "bg-red-600")} />
+          {data.store.isOpen ? "Open · Accepting orders" : "Closed"}
+        </button>
+      </div>
 
-      <div className="mb-5 grid grid-cols-3 gap-3">
+      <div className="mb-5 grid grid-cols-4 gap-3">
         <Link href="/store/products" className="relative rounded-2xl border border-border bg-white p-3 text-center">
           <span className="text-xl">🛍️</span>
           <p className="mt-1 text-xs font-semibold">Products</p>
@@ -72,7 +102,29 @@ export default function StoreDashboardPage() {
           <span className="text-xl">🏪</span>
           <p className="mt-1 text-xs font-semibold">Profile</p>
         </Link>
+        <Link href="/store/reports" className="relative rounded-2xl border border-border bg-white p-3 text-center">
+          <span className="text-xl">📊</span>
+          <p className="mt-1 text-xs font-semibold">Reports</p>
+        </Link>
       </div>
+
+      <Card className="mb-3">
+        <CardContent>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-muted">Total sales (delivered)</p>
+              <p className="text-xl font-semibold text-ink">{formatINR(data.mockDeliveredValue)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted">Total orders</p>
+              <p className="text-xl font-semibold text-ink">{data.totalOrders}</p>
+            </div>
+            <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800">● Live</span>
+          </div>
+          <BarChart values={hourlyBuckets(data.orderTimes)} labels={HOUR_LABELS} />
+          <p className="mt-1 text-[10px] text-muted">Orders placed by hour of day, from your real order history</p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-3 gap-3">
         <Card>
@@ -95,17 +147,6 @@ export default function StoreDashboardPage() {
         </Card>
       </div>
 
-      <Card className="mt-3">
-        <CardContent className="flex items-center justify-between">
-          <div>
-            <p className="text-xs text-muted">Mock order value (delivered)</p>
-            <p className="mt-1 text-xl font-semibold text-ink">{formatINR(data.mockDeliveredValue)}</p>
-          </div>
-          <Link href="/store/products" className="text-sm font-medium text-rose">
-            Manage products →
-          </Link>
-        </CardContent>
-      </Card>
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-ink">Recent orders</h2>
       <div className="space-y-3">

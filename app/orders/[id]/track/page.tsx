@@ -10,11 +10,30 @@ import { GiftMessagePreview } from "@/components/GiftMessagePreview";
 import { PriceSummary } from "@/components/PriceSummary";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
-import { buildTimeline, ORDER_STATUS_EXPLANATIONS } from "@/lib/services/orderStateMachine";
-import { RefreshCw, XCircle } from "lucide-react";
+import { buildTimeline, ORDER_SEQUENCE, ORDER_STATUS_EXPLANATIONS, ORDER_STATUS_LABELS } from "@/lib/services/orderStateMachine";
+import { TrackingMap } from "@/components/TrackingMap";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { demoEtaMinutes, demoRider } from "@/lib/demoRatings";
+import { Copy, Check, MessageCircle, Phone, RefreshCw, XCircle } from "lucide-react";
 import Link from "next/link";
 
 const POLL_MS = 15000;
+
+function DemoNotice({ message, onClose }: { message: string | null; onClose: () => void }) {
+  return (
+    <Dialog open={!!message} onOpenChange={(open) => !open && onClose()}>
+      {message && (
+        <DialogContent>
+          <DialogTitle className="text-lg font-semibold text-ink">Demo only</DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-muted">{message}</DialogDescription>
+          <div className="mt-5 flex justify-end">
+            <Button onClick={onClose}>OK</Button>
+          </div>
+        </DialogContent>
+      )}
+    </Dialog>
+  );
+}
 
 function DeliveryConfirmFlow({ orderId, onConfirmed }: { orderId: string; onConfirmed: () => void }) {
   const [photo, setPhoto] = useState<string | null>(null);
@@ -90,6 +109,8 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [demoMessage, setDemoMessage] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback((silent = false) => {
@@ -142,13 +163,29 @@ export default function TrackOrderPage() {
 
   const item = order.items[0];
   const timeline = buildTimeline(order.status, order.statusHistory);
+  const stepIndex = ORDER_SEQUENCE.indexOf(order.status);
+  const rider = demoRider(order.id);
 
   return (
     <CustomerShell>
       <div className="p-4">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted">{order.orderCode}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted">{order.orderCode}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(order.orderCode).catch(() => {});
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1800);
+                }}
+                className="flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted"
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
             <StatusBadge status={order.status} />
           </div>
           <Button variant="outline" size="sm" onClick={() => load()} disabled={refreshing}>
@@ -156,7 +193,62 @@ export default function TrackOrderPage() {
           </Button>
         </div>
 
-        <p className="mb-4 rounded-xl bg-blush/50 p-3 text-sm text-ink">{ORDER_STATUS_EXPLANATIONS[order.status as keyof typeof ORDER_STATUS_EXPLANATIONS]}</p>
+        {order.status !== "REJECTED" ? (
+          <>
+            <div className="mb-3 overflow-hidden rounded-2xl bg-white shadow-sm">
+              <TrackingMap status={order.status} />
+              <p className="py-2 text-center text-[10px] text-muted">🗺️ Illustrative map view - not a live location</p>
+            </div>
+            <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+              <div className="flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-full border-2 border-rose bg-blush">
+                {stepIndex >= 1 && stepIndex < ORDER_SEQUENCE.length - 1 ? (
+                  <>
+                    <span className="text-base font-extrabold leading-none text-rose">{demoEtaMinutes(order.id, stepIndex)}</span>
+                    <span className="text-[8px] font-bold text-rose">MIN</span>
+                  </>
+                ) : (
+                  <span className="text-lg">🎁</span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-ink">{ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS]}</p>
+                <p className="text-xs text-muted">{ORDER_STATUS_EXPLANATIONS[order.status as keyof typeof ORDER_STATUS_EXPLANATIONS]}</p>
+                {stepIndex >= 1 && stepIndex < ORDER_SEQUENCE.length - 1 && <p className="text-[11px] text-muted">Estimated time is a demo value</p>}
+              </div>
+            </div>
+            {order.status === "OUT_FOR_DELIVERY" && (
+              <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-rose font-serif text-sm font-bold text-white">
+                  {rider.name.split(" ").map((w) => w[0]).join("")}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">{rider.name}</p>
+                  <p className="text-[11px] text-muted">
+                    {rider.vehicle} · {rider.plate} · demo delivery partner
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Chat with delivery partner"
+                  onClick={() => setDemoMessage("This is a demo - no real chat is connected to your delivery partner here.")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-ink"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Call delivery partner"
+                  onClick={() => setDemoMessage("This is a demo - no real call is placed to your delivery partner here.")}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1D9E75] text-white"
+                >
+                  <Phone className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mb-4 rounded-xl bg-blush/50 p-3 text-sm text-ink">{ORDER_STATUS_EXPLANATIONS[order.status as keyof typeof ORDER_STATUS_EXPLANATIONS]}</p>
+        )}
 
         {order.status === "REJECTED" ? (
           <div className="mb-5 rounded-2xl bg-red-50 p-4">
@@ -222,6 +314,7 @@ export default function TrackOrderPage() {
           <PriceSummary subtotal={order.subtotal} deliveryFee={order.deliveryFee} total={order.total} />
         </div>
       </div>
+      <DemoNotice message={demoMessage} onClose={() => setDemoMessage(null)} />
     </CustomerShell>
   );
 }

@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { NotFoundError } from "@/lib/api-errors";
 import { ModerationStatus, Prisma } from "@prisma/client";
 
-export async function getAdminDashboard() {
+export async function getAdminDashboard(cityId?: string) {
   const db = getDb();
   const [totalStores, totalProducts, totalOrders, byStatus, deliveredAgg, recentOrders] = await Promise.all([
     db.store.count(),
@@ -22,6 +22,54 @@ export async function getAdminDashboard() {
     statusCounts,
     mockDeliveredValue: deliveredAgg._sum.total ?? 0,
     recentOrders,
+    ...(await getAdminOverview(cityId)),
+  };
+}
+
+async function getAdminOverview(cityId?: string) {
+  const db = getDb();
+  const storeWhere = cityId ? { cityId } : {};
+  const [cities, stores, orders] = await Promise.all([
+    db.city.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { stores: true } } } }),
+    db.store.findMany({ where: storeWhere, select: { id: true, isOpen: true } }),
+    db.order.findMany({ where: cityId ? { store: { cityId } } : {}, select: { placedAt: true, status: true, total: true } }),
+  ]);
+  return {
+    cities: cities.map((c) => ({ id: c.id, name: c.name, storeCount: c._count.stores })),
+    scope: { storeCount: stores.length, openStores: stores.filter((s) => s.isOpen).length },
+    orders,
+  };
+}
+
+export async function getReturnsAnalytics() {
+  const db = getDb();
+  const [totalOrders, rejected, byStore, stores] = await Promise.all([
+    db.order.count(),
+    db.order.findMany({ where: { status: "REJECTED" }, select: { placedAt: true, rejectionReason: true, storeId: true } }),
+    db.order.groupBy({ by: ["storeId"], _count: { _all: true } }),
+    db.store.findMany({ select: { id: true, name: true } }),
+  ]);
+  const reasonCounts = new Map<string, number>();
+  const rejectedByStore = new Map<string, number>();
+  for (const o of rejected) {
+    const reason = o.rejectionReason?.trim() || "Unspecified";
+    reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + 1);
+    rejectedByStore.set(o.storeId, (rejectedByStore.get(o.storeId) ?? 0) + 1);
+  }
+  const totalByStore = new Map(byStore.map((s) => [s.storeId, s._count._all]));
+  const storeRows = stores
+    .map((s) => {
+      const total = totalByStore.get(s.id) ?? 0;
+      const count = rejectedByStore.get(s.id) ?? 0;
+      return { name: s.name, total, count, pct: total ? (count / total) * 100 : 0 };
+    })
+    .sort((a, b) => b.pct - a.pct || b.total - a.total);
+  return {
+    totalOrders,
+    rejectedCount: rejected.length,
+    rejectedDates: rejected.map((o) => o.placedAt),
+    reasons: [...reasonCounts.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count),
+    stores: storeRows,
   };
 }
 

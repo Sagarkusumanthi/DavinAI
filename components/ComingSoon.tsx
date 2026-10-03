@@ -1,8 +1,7 @@
-import { Sparkles, CalendarHeart } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 const TEASERS = [
   { icon: Sparkles, title: "AI Gift Assistant", body: "Tell us about them - we'll suggest the perfect gift." },
-  { icon: CalendarHeart, title: "Birthday Reminders", body: "Never miss a special day again." },
 ];
 
 export function ComingSoon() {

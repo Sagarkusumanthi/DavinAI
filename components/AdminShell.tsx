@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Store, Package, ClipboardList, Users, LogOut, Crown } from "lucide-react";
+import { LayoutDashboard, Store, Package, ClipboardList, Users, LogOut, Crown, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin/stores", label: "Stores", icon: Store },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList },
+  { href: "/admin/returns", label: "Returns", icon: Undo2 },
   { href: "/admin/users", label: "Users & reports", icon: Users },
 ];
 
