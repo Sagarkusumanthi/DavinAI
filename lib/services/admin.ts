@@ -47,7 +47,7 @@ export async function getReturnsAnalytics() {
     db.order.count(),
     db.order.findMany({ where: { status: "REJECTED" }, select: { placedAt: true, rejectionReason: true, storeId: true } }),
     db.order.groupBy({ by: ["storeId"], _count: { _all: true } }),
-    db.store.findMany({ select: { id: true, name: true } }),
+    db.store.findMany({ select: { id: true, name: true, city: { select: { name: true } } } }),
   ]);
   const reasonCounts = new Map<string, number>();
   const rejectedByStore = new Map<string, number>();
@@ -61,7 +61,7 @@ export async function getReturnsAnalytics() {
     .map((s) => {
       const total = totalByStore.get(s.id) ?? 0;
       const count = rejectedByStore.get(s.id) ?? 0;
-      return { name: s.name, total, count, pct: total ? (count / total) * 100 : 0 };
+      return { id: s.id, name: s.name, city: s.city.name, total, count, pct: total ? (count / total) * 100 : 0 };
     })
     .sort((a, b) => b.pct - a.pct || b.total - a.total);
   return {

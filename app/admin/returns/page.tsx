@@ -11,7 +11,7 @@ type Returns = {
   rejectedCount: number;
   rejectedDates: string[];
   reasons: { reason: string; count: number }[];
-  stores: { name: string; total: number; count: number; pct: number }[];
+  stores: { id: string; name: string; city: string; total: number; count: number; pct: number }[];
 };
 
 export default function AdminReturnsPage() {
@@ -102,9 +102,11 @@ export default function AdminReturnsPage() {
         <CardContent>
           <p className="mb-3 text-sm font-semibold text-ink">Rejections by store</p>
           {topStores.map((s) => (
-            <div key={s.name} className="mb-2">
+            <div key={s.id} className="mb-2">
               <div className="mb-1 flex justify-between text-xs">
-                <span>{s.name}</span>
+                <span>
+                  {s.name} <span className="text-muted">· {s.city}</span>
+                </span>
                 <span className="font-semibold">{s.pct.toFixed(1)}%</span>
               </div>
               <ProgressBar pct={(s.pct / maxStorePct) * 100} className="bg-ink" />
@@ -118,14 +120,14 @@ export default function AdminReturnsPage() {
           <p className="mb-1 font-semibold text-ink">Key facts</p>
           {worst ? (
             <p>
-              📌 <b>{worst.name}</b> has the highest reject rate at {worst.pct.toFixed(1)}% ({worst.count} rejected order{worst.count > 1 ? "s" : ""}).
+              📌 <b>{worst.name}</b> ({worst.city}) has the highest reject rate at {worst.pct.toFixed(1)}% ({worst.count} rejected order{worst.count > 1 ? "s" : ""}).
             </p>
           ) : (
             <p>📌 No store has any rejected orders yet.</p>
           )}
           {busiest && busiest.total > 0 && (
             <p>
-              📌 <b>{busiest.name}</b> has the most orders overall ({busiest.total}).
+              📌 <b>{busiest.name}</b> ({busiest.city}) has the most orders overall ({busiest.total}).
             </p>
           )}
         </CardContent>

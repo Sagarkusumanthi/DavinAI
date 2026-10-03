@@ -121,8 +121,8 @@ export default function StoreDashboardPage() {
             </div>
             <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-800">● Live</span>
           </div>
-          <BarChart values={hourlyBuckets(data.orderTimes)} labels={HOUR_LABELS} />
-          <p className="mt-1 text-[10px] text-muted">Orders placed by hour of day, from your real order history</p>
+          <BarChart values={hourlyBuckets(data.orderTimes)} labels={HOUR_LABELS} highlight={Math.floor(new Date().getHours() / 3)} />
+          <p className="mt-1 text-[10px] text-muted">Orders placed by hour of day, from your real order history (current hour highlighted)</p>
         </CardContent>
       </Card>
 

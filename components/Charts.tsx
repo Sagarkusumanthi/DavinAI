@@ -46,7 +46,7 @@ export function Sparkline({ values, color = "#D9663F" }: { values: number[]; col
   );
 }
 
-export function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
+export function BarChart({ values, labels, highlight = values.length - 1 }: { values: number[]; labels: string[]; highlight?: number }) {
   const max = Math.max(1, ...values);
   return (
     <div>
@@ -54,7 +54,7 @@ export function BarChart({ values, labels }: { values: number[]; labels: string[
         {values.map((v, i) => (
           <div key={i} className="flex flex-1 justify-center" title={`${labels[i]}: ${v}`}>
             <div
-              className={i === values.length - 1 ? "w-full max-w-[22px] rounded-t-[5px] rounded-b-[2px] bg-rose" : "w-full max-w-[22px] rounded-t-[5px] rounded-b-[2px] bg-ink"}
+              className={i === highlight ? "w-full max-w-[22px] rounded-t-[5px] rounded-b-[2px] bg-rose" : "w-full max-w-[22px] rounded-t-[5px] rounded-b-[2px] bg-ink"}
               style={{ height: Math.max(4, Math.round((v / max) * 56)) }}
             />
           </div>
