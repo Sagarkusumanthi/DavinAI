@@ -61,6 +61,7 @@ model User {
   statusChanges  OrderStatusHistory[]
   reminders      Reminder[]
   groupGifts     GroupGift[]
+  cartItems      CartItem[]
 
   @@index([role])
 }
@@ -130,9 +131,25 @@ model Product {
 
   orderItems     OrderItem[]
   groupGiftItems GroupGiftItem[]
+  cartItems      CartItem[]
 
   @@index([storeId])
   @@index([categoryId])
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
 }
 
 model Order {
