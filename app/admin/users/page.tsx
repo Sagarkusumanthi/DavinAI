@@ -67,7 +67,7 @@ export default function AdminUsersReportsPage() {
           <>
             {!reports && <LoadingSkeleton className="h-40 w-full" />}
             {reports && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <Card>
                   <CardContent>
                     <h3 className="mb-2 text-sm font-semibold text-ink">Orders by city</h3>

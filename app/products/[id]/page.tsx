@@ -180,7 +180,7 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-20 flex gap-2 border-t border-ink/5 bg-white p-4">
+      <div className="fixed bottom-16 left-0 right-0 z-20 mx-auto flex max-w-phone gap-2 border-t border-ink/5 bg-white p-4">
         <Button
           variant="outline"
           className="flex-1"

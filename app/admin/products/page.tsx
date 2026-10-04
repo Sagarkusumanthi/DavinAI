@@ -47,7 +47,7 @@ export default function AdminProductsPage() {
       </div>
       {!products && <LoadingSkeleton className="h-40 w-full" />}
       {products && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3">
           {products.map((p) => (
             <Card key={p.id} className="cursor-pointer" onClick={() => (window.location.href = `/admin/products/${p.id}`)}>
               <div className="flex gap-3 p-3">

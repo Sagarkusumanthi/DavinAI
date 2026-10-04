@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Store, Package, ClipboardList, Users, LogOut, Crown, Undo2 } from "lucide-react";
+import { LayoutDashboard, Store, Package, ClipboardList, Users, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -24,38 +24,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-blush/20 pb-16 lg:flex lg:pb-0">
-      <aside className="hidden w-60 flex-shrink-0 flex-col border-r border-ink/5 bg-white p-4 lg:flex">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
-            <Crown className="h-4 w-4" />
-          </div>
-          <span className="font-serif font-semibold text-ink">Giftly · Admin</span>
-        </div>
-        <nav className="flex-1 space-y-1">
-          {NAV.map((item) => {
-            const active = pathname.startsWith(item.href);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium",
-                  active ? "bg-ink text-white" : "text-ink hover:bg-blush/60"
-                )}
-              >
-                <Icon className="h-4 w-4" /> {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <button onClick={logout} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted hover:bg-blush/60">
-          <LogOut className="h-4 w-4" /> Log out
-        </button>
-      </aside>
+    <div className="min-h-screen bg-blush/20 pb-16">
       <div className="flex-1">
-        <div className="flex items-center justify-between border-b border-ink/5 bg-white px-4 py-3 lg:hidden">
+        <div className="flex items-center justify-between border-b border-ink/5 bg-white px-4 py-3">
           <span className="font-serif font-semibold text-ink">Giftly · Admin</span>
           <button onClick={logout} className="text-sm text-muted">
             Log out
@@ -63,7 +34,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="p-4">{children}</main>
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex overflow-x-auto border-t border-ink/5 bg-white lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 mx-auto flex max-w-phone overflow-x-auto border-t border-ink/5 bg-white">
         {NAV.map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;

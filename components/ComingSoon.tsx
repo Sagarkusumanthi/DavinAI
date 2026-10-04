@@ -8,7 +8,7 @@ export function ComingSoon() {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-serif text-lg font-semibold text-ink">Coming soon</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         {TEASERS.map(({ icon: Icon, title, body }) => (
           <div key={title} className="flex items-start gap-3 rounded-2xl border border-dashed border-rose/30 bg-blush/40 p-4">
             <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white text-rose shadow-sm">

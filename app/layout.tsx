@@ -25,7 +25,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+      <body className="min-h-screen font-sans antialiased">
+        {/* Always render as a phone-width app, centred on larger screens. */}
+        <div className="relative mx-auto min-h-screen w-full max-w-phone overflow-x-hidden bg-background shadow-[0_0_40px_rgba(59,42,34,0.18)]">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

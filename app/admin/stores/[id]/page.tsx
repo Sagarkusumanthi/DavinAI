@@ -44,7 +44,7 @@ export default function AdminStoreDetailPage() {
       <button onClick={() => router.push("/admin/stores")} className="mb-3 text-sm font-semibold text-ink">← Back to stores</button>
       <h1 className="mb-4 font-serif text-xl font-semibold text-ink">{store.name}</h1>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         <Card>
           <CardContent>
             <p className="text-xs uppercase text-muted">Store info</p>

@@ -16,7 +16,7 @@ export function ActiveOrderCard({ order }: { order: any }) {
   const item = order.items[0];
   const currentIndex = ORDER_SEQUENCE.indexOf(order.status);
   return (
-    <section className="rounded-3xl border border-rose/20 bg-white p-4 shadow-sm md:p-5">
+    <section className="rounded-3xl border border-rose/20 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-ink">
           <PackageCheck className="h-5 w-5 text-rose" />

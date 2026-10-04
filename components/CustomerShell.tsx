@@ -72,7 +72,7 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
 
       <main>{children}</main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-phone border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)]">
         <div className="mx-auto grid max-w-lg grid-cols-6">
           {NAV_ITEMS.map((item) => {
             const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -96,7 +96,7 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-40 flex justify-end bg-black/40" onClick={() => setDrawerOpen(false)}>
+        <div className="fixed inset-0 z-40 mx-auto flex max-w-phone justify-end bg-black/40" onClick={() => setDrawerOpen(false)}>
           <div className="flex h-full w-80 max-w-[85vw] flex-col bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-serif text-lg font-semibold text-ink">Account</h2>

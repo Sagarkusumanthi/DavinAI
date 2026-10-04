@@ -282,7 +282,7 @@ function CheckoutInner() {
         {submitError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
       </form>
 
-      <div className="fixed bottom-16 left-0 right-0 z-20 border-t border-ink/5 bg-white p-4">
+      <div className="fixed bottom-16 left-0 right-0 z-20 mx-auto max-w-phone border-t border-ink/5 bg-white p-4">
         <Button className="w-full" size="lg" disabled={submitting} onClick={handleSubmit(onSubmit, onInvalid)}>
           {submitting ? "Placing order..." : `Place mock order · ${formatINR(totals.total)}`}
         </Button>

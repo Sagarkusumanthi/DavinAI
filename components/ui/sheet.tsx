@@ -13,7 +13,7 @@ export function SheetContent({ className, children, ...props }: React.ComponentP
       <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] shadow-lg",
+          "fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[88vh] w-full max-w-phone overflow-y-auto rounded-t-3xl bg-background p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] shadow-lg",
           "data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom",
           className
         )}

@@ -84,7 +84,7 @@ export default function StoreDetailPage() {
         {store.products.length === 0 ? (
           <EmptyState title="No products yet" description="This store hasn't added any products." />
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3">
             {store.products.map((p: any) => (
               <ProductCard key={p.id} id={p.id} name={p.name} price={p.price} imageUrl={p.imageUrl} storeName={store.name} featured={p.isFeatured} />
             ))}

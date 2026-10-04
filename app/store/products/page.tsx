@@ -179,7 +179,7 @@ export default function StoreProductsPage() {
         </Card>
       )}
       {products && products.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3">
           {products.map((p) => (
             <Card key={p.id} className={cn(p.isArchived && "opacity-50")}>
               <div className="flex gap-3 p-3">

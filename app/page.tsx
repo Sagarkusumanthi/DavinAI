@@ -80,7 +80,7 @@ export default function HomePage() {
           />
         </form>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+        <div className="mt-4 grid gap-4">
           <HeroBanner cityName={cityName || "your city"} onExplore={() => document.getElementById("featured")?.scrollIntoView({ behavior: "smooth" })} />
           <ActiveOrderCard order={activeOrder} />
         </div>
@@ -107,10 +107,10 @@ export default function HomePage() {
             ) : (
               <>
                 <section id="featured" className="mt-6 scroll-mt-20">
-                  <h2 className="font-serif text-lg font-semibold text-ink md:text-xl">Featured gifts in {cityName}</h2>
+                  <h2 className="font-serif text-lg font-semibold text-ink">Featured gifts in {cityName}</h2>
                   <p className="mb-3 text-sm text-muted">{featured.length} {featured.length === 1 ? "gift" : "gifts"} available today</p>
                   {featured.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {featured.map((p: any) => (
                         <ProductCard
                           key={p.id}
@@ -131,7 +131,7 @@ export default function HomePage() {
                 </section>
 
                 <section className="mt-6">
-                  <h2 className="mb-3 font-serif text-lg font-semibold text-ink md:text-xl">Popular local stores in {cityName}</h2>
+                  <h2 className="mb-3 font-serif text-lg font-semibold text-ink">Popular local stores in {cityName}</h2>
                   <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
                     {data.stores.map((s: any) => (
                       <StoreCard

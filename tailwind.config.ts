@@ -26,6 +26,9 @@ const config: Config = {
         sans: ["var(--font-dm-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ["var(--font-fraunces)", "ui-serif", "Georgia", "serif"]
       },
+      maxWidth: {
+        phone: "480px"
+      },
       borderRadius: {
         xl: "1rem",
         "2xl": "1.25rem",

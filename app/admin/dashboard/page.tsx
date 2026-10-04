@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
       <Overview data={data} />
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-ink">Platform totals</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent>
             <p className="text-xs text-muted">Total stores</p>
@@ -137,7 +137,7 @@ function Overview({ data }: { data: any }) {
   return (
     <>
       <p className="mb-2 text-[11px] uppercase tracking-wide text-muted">Today&apos;s overview</p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent>
             <p className="text-xs text-muted">Orders today</p>
@@ -181,7 +181,7 @@ function Overview({ data }: { data: any }) {
         </CardContent>
       </Card>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+      <div className="mt-3 grid gap-3">
         <Card>
           <CardContent>
             <p className="mb-1 text-sm font-semibold text-ink">Orders trend (last 7 days)</p>

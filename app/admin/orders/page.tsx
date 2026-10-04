@@ -41,11 +41,11 @@ function AdminOrdersInner() {
   return (
     <AdminShell>
       <h1 className="mb-4 font-serif text-xl font-semibold text-ink">Orders</h1>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-2">
         <form onSubmit={submitSearch} className="flex-1">
           <Input placeholder="Search by order code" value={orderCode} onChange={(e) => setOrderCode(e.target.value)} />
         </form>
-        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="sm:w-56">
+        <Select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
           {Object.entries(ORDER_STATUS_LABELS).map(([key, label]) => (
             <option key={key} value={key}>

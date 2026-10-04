@@ -50,7 +50,7 @@ export function StoreCard({
       <Link
         href={`/stores/${id}`}
         onClick={onOpen ? (e) => { e.preventDefault(); onOpen(id); } : undefined}
-        className="block w-64 flex-shrink-0 snap-start md:w-72"
+        className="block w-64 flex-shrink-0 snap-start"
       >
         <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-blush">
