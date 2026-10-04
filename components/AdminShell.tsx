@@ -10,7 +10,7 @@ const NAV = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ClipboardList },
   { href: "/admin/returns", label: "Returns", icon: Undo2 },
-  { href: "/admin/users", label: "Users & reports", icon: Users },
+  { href: "/admin/users", label: "Users", icon: Users },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -39,7 +39,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
-            <Link key={item.href} href={item.href} className={cn("flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px]", active ? "text-rose" : "text-muted")}>
+            <Link key={item.href} href={item.href} className={cn("flex min-w-0 flex-1 flex-col items-center gap-1 whitespace-nowrap py-2.5 text-[10.5px]", active ? "text-rose" : "text-muted")}>
               <Icon className="h-5 w-5" />
               {item.label}
             </Link>

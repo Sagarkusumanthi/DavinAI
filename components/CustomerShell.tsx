@@ -81,7 +81,7 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
-                className={cn("flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium", active ? "text-rose" : "text-muted")}
+                className={cn("flex min-w-0 flex-col items-center gap-1 whitespace-nowrap py-2.5 text-[10.5px] font-medium", active ? "text-rose" : "text-muted")}
               >
                 <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
                 {item.label}
@@ -97,7 +97,7 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
 
       {drawerOpen && (
         <div className="fixed inset-0 z-40 mx-auto flex max-w-phone justify-end bg-black/40" onClick={() => setDrawerOpen(false)}>
-          <div className="flex h-full w-80 max-w-[85vw] flex-col bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex h-full w-80 max-w-[85%] flex-col bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-serif text-lg font-semibold text-ink">Account</h2>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close">

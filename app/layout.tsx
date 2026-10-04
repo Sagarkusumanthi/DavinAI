@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PhoneFrame } from "@/components/PhoneFrame";
 
 export const metadata: Metadata = {
   title: "Giftly - Send a little love",
@@ -26,10 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen font-sans antialiased">
-        {/* Always render as a phone-width app, centred on larger screens. */}
-        <div className="relative mx-auto min-h-screen w-full max-w-phone overflow-x-hidden bg-background shadow-[0_0_40px_rgba(59,42,34,0.18)]">
-          {children}
-        </div>
+        <PhoneFrame>{children}</PhoneFrame>
       </body>
     </html>
   );
